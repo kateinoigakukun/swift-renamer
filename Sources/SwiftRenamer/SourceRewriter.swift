@@ -1,5 +1,11 @@
-public struct Replacement {
-    let location: (line: Int64, column: Int64)
+public struct Replacement: Hashable {
+
+    struct Location: Hashable {
+        let line: Int64
+        let column: Int64
+    }
+
+    let location: Location
     let length: Int
     let newText: String
 }
@@ -18,7 +24,7 @@ public class SourceRewriter {
     }
 
     public func apply() -> String {
-        let sorted = replacements.sorted(by: {
+        let sorted = Set(replacements).sorted(by: {
             $0.location.line == $1.location.line ?
                 $0.location.column > $1.location.column :
                 $0.location.line > $1.location.line

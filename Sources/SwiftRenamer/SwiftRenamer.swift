@@ -44,7 +44,7 @@ public struct SwiftRename {
 
         for entry in entries {
             let replacement = Replacement(
-                location: (entry.occ.location.line, entry.occ.location.column),
+                location: .init(line: entry.occ.location.line, column: entry.occ.location.column),
                 length: entry.occ.symbol.name.count, newText: entry.newSymbol
             )
             if results[entry.occ.location.path] == nil {

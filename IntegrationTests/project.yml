@@ -1,0 +1,7 @@
+name: IntegrationTests
+targets:
+  IntegrationTests:
+    platform: iOS
+    type: framework
+    sources:
+      - Sources

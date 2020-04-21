@@ -26,7 +26,9 @@ You can use this library like below:
 import SwiftRenamer
 
 let renamer = SwiftRenamer(storePath: indexStorePath)
-let replacements = try renamer.replacements(for: "s:16IntegrationTests9ViewModelC4nameSSSgvp", newSymbol: "nickname")
+let replacements = try system.replacements(where: { (occ) -> String? in
+    occ.symbol.usr == "s:16IntegrationTests9ViewModelC4nameSSSgvp" ? "nickname" : nil
+})
 
 for (filePath, replacements) in replacements {
     let rewriter = try SourceRewriter(content: String(contentsOfFile: filePath))

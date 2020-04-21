@@ -27,14 +27,22 @@ public struct SwiftRename {
         return occs
     }
 
-    public func replacements(
-                             where condition: (IndexStoreOccurrence) -> String?) throws -> [String: [Replacement]] {
-        var entries: [(occ: IndexStoreOccurrence, newSymbol: String)] = []
+    public func replacements(where condition: (IndexStoreOccurrence) -> String?) throws -> [String: [Replacement]] {
+
+        var usrToOccurrence: [String: [IndexStoreOccurrence]] = [:]
+        var entries: [(usr: String, newSymbol: String)] = []
+
         try self.indexStore.forEachUnits { unit -> Bool in
             try self.indexStore.forEachOccurrences(for: unit) { (occurrence) -> Bool in
                 guard !occurrence.location.isSystem else { return true }
                 guard let newSymbol = condition(occurrence) else { return true }
-                entries.append((occurrence, newSymbol))
+                entries.append((occurrence.symbol.usr, newSymbol))
+
+                if usrToOccurrence[occurrence.symbol.usr] == nil {
+                    usrToOccurrence[occurrence.symbol.usr] = []
+                } else {
+                    usrToOccurrence[occurrence.symbol.usr]?.append(occurrence)
+                }
                 return true
             }
             return true
@@ -43,14 +51,17 @@ public struct SwiftRename {
         var results: [/* path */ String: [Replacement]] = [:]
 
         for entry in entries {
-            let replacement = Replacement(
-                location: .init(line: entry.occ.location.line, column: entry.occ.location.column),
-                length: entry.occ.symbol.name.count, newText: entry.newSymbol
-            )
-            if results[entry.occ.location.path] == nil {
-                results[entry.occ.location.path] = [replacement]
-            } else {
-                results[entry.occ.location.path]?.append(replacement)
+            let occs = usrToOccurrence[entry.usr]!
+            for occ in occs {
+                let replacement = Replacement(
+                    location: .init(line: occ.location.line, column: occ.location.column),
+                    length: occ.symbol.name.count, newText: entry.newSymbol
+                )
+                if results[occ.location.path] == nil {
+                    results[occ.location.path] = [replacement]
+                } else {
+                    results[occ.location.path]?.append(replacement)
+                }
             }
         }
         return results

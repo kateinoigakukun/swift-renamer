@@ -26,8 +26,8 @@ public class SourceRewriter {
     public func apply() -> String {
         let sorted = replacements.unique().sorted(by: {
                 $0.location.line == $1.location.line ?
-                    $0.location.column > $1.location.column :
-                    $0.location.line > $1.location.line
+                    $0.location.column < $1.location.column :
+                    $0.location.line < $1.location.line
         })
         var lines = content.components(separatedBy: "\n")
         var lineOffset = 0

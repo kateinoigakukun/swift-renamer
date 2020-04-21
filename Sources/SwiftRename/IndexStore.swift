@@ -99,6 +99,8 @@ struct IndexStoreSymbol {
     let kind: Kind
     let subKind: SubKind
     let language: Language
+
+    fileprivate let anchor: indexstore_symbol_t?
 }
 
 struct IndexStoreOccurrence {
@@ -170,7 +172,7 @@ enum IndexStoreError: LocalizedError {
     case missingSymbol(String)
     case unableGetErrorDescription
     case unableGetToolchainDirectory
-    
+
     var errorDescription: String? {
         switch self {
         case .internalError(let message):
@@ -211,7 +213,7 @@ final class IndexStore {
     fileprivate class Context<T> {
         let api: IndexStoreAPI
         var content: T
-        var error: Error? = nil
+        var error: Error?
         init(_ content: T, api: IndexStoreAPI) {
             self.content = content
             self.api = api
@@ -226,8 +228,7 @@ final class IndexStore {
             _ = api.fn.store_units_apply_f(store, false.bit, ctx) { ctx, unitName -> Bool in
                 let ctx = Unmanaged<Ctx>.fromOpaque(ctx!).takeUnretainedValue()
                 let unit = IndexStoreUnit(name: unitName.toSwiftString())
-                do { return try ctx.content(unit) }
-                catch {
+                do { return try ctx.content(unit) } catch {
                     ctx.error = error
                     return false
                 }
@@ -238,7 +239,7 @@ final class IndexStore {
         }
     }
 
-    private func forEachRecordDependencies(for unit: IndexStoreUnit, _ next: (indexstore_unit_dependency_t) throws -> Bool) throws {
+    func forEachRecordDependencies(for unit: IndexStoreUnit, _ next: (indexstore_unit_dependency_t) throws -> Bool) throws {
         guard let reader = try api.throwsfy({ api.fn.unit_reader_create(store, unit.name, &$0) }) else {
             throw IndexStoreError.unableCreateUnintReader(unit.name)
         }
@@ -250,8 +251,7 @@ final class IndexStore {
                 let ctx = Unmanaged<Ctx>.fromOpaque(ctx!).takeUnretainedValue()
                 switch ctx.api.fn.unit_dependency_get_kind(dependency) {
                 case INDEXSTORE_UNIT_DEPENDENCY_RECORD:
-                    do { return try ctx.content(dependency!) }
-                    catch {
+                    do { return try ctx.content(dependency!) } catch {
                         ctx.error = error
                         return false
                     }
@@ -266,7 +266,7 @@ final class IndexStore {
             }
         }
     }
-    
+
     private static func createSymbol(from symbol: indexstore_symbol_t?, api: IndexStoreAPI) -> IndexStoreSymbol {
         let symbolKind = IndexStoreSymbol.Kind(rawValue: api.fn.symbol_get_kind(symbol).rawValue)!
         let symbolSubKind = IndexStoreSymbol.SubKind(rawValue: api.fn.symbol_get_subkind(symbol).rawValue)!
@@ -276,31 +276,76 @@ final class IndexStore {
         return IndexStoreSymbol(
             usr: symbolUsr, name: symbolName,
             kind: symbolKind, subKind: symbolSubKind,
-            language: symbolLanguage
+            language: symbolLanguage,
+            anchor: symbol
         )
     }
-    
-    func forEachSymbols(for unit: IndexStoreUnit, _ next: (IndexStoreSymbol) throws -> Bool) throws {
-        try forEachRecordDependencies(for: unit) { record -> Bool in
-            let recordName = api.fn.unit_dependency_get_name(record).toSwiftString()
-            let recordPath = api.fn.unit_dependency_get_filepath(record).toSwiftString()
-            let isSystem = api.fn.unit_dependency_is_system(record)
-            guard let reader = try api.throwsfy({ api.fn.record_reader_create(store, recordName, &$0) }) else {
-                throw IndexStoreError.unableCreateRecordReader(recordName)
-            }
-            typealias Ctx = Context<(
-                next: (IndexStoreSymbol) throws -> Bool,
-                filepath: String,
-                isSystem: Bool
+
+    func forEachSymbols(for record: indexstore_unit_dependency_t, _ next: (IndexStoreSymbol) throws -> Bool) throws {
+        let recordName = api.fn.unit_dependency_get_name(record).toSwiftString()
+        let recordPath = api.fn.unit_dependency_get_filepath(record).toSwiftString()
+        let isSystem = api.fn.unit_dependency_is_system(record)
+        guard let reader = try api.throwsfy({ api.fn.record_reader_create(store, recordName, &$0) }) else {
+            throw IndexStoreError.unableCreateRecordReader(recordName)
+        }
+        typealias Ctx = Context<(
+            next: (IndexStoreSymbol) throws -> Bool,
+            filepath: String,
+            isSystem: Bool
             )>
-            try withoutActuallyEscaping(next) { next in
-                let handler = Ctx((next, recordPath, isSystem), api: api)
-                let ctx = Unmanaged.passUnretained(handler).toOpaque()
-                _ = api.fn.record_reader_symbols_apply_f(reader, true, ctx) { ctx, symbol -> Bool in
+        try withoutActuallyEscaping(next) { next in
+            let handler = Ctx((next, recordPath, isSystem), api: api)
+            let ctx = Unmanaged.passUnretained(handler).toOpaque()
+            _ = api.fn.record_reader_symbols_apply_f(reader, true, ctx) { ctx, symbol -> Bool in
+                let ctx = Unmanaged<Ctx>.fromOpaque(ctx!).takeUnretainedValue()
+                let sym = IndexStore.createSymbol(from: symbol, api: ctx.api)
+                do { return try ctx.content.next(sym) } catch {
+                    ctx.error = error
+                    return false
+                }
+            }
+            if let error = handler.error {
+                throw error
+            }
+        }
+    }
+
+    func forEachOccurrences(for record: indexstore_unit_dependency_t, symbol: IndexStoreSymbolRef,
+                            _ next: (IndexStoreOccurrence) throws -> Bool) throws {
+        let recordName = api.fn.unit_dependency_get_name(record).toSwiftString()
+        let recordPath = api.fn.unit_dependency_get_filepath(record).toSwiftString()
+        let isSystem = api.fn.unit_dependency_is_system(record)
+
+        guard let reader = try api.throwsfy({ api.fn.record_reader_create(store, recordName, &$0) }) else {
+            throw IndexStoreError.unableCreateRecordReader(recordName)
+        }
+
+        typealias Ctx = Context<(
+            next: (IndexStoreOccurrence) throws -> Bool,
+            filepath: String,
+            isSystem: Bool
+        )>
+        try withoutActuallyEscaping(next) { next in
+            let handler = Ctx((next, recordPath, isSystem), api: api)
+            let ctx = Unmanaged.passUnretained(handler).toOpaque()
+            var symbols = [symbol.anchor]
+            _ = try symbols.withContiguousMutableStorageIfAvailable { syms in
+                _ = api.fn.record_reader_occurrences_of_symbols_apply_f(
+                    reader, syms.baseAddress!, syms.count, nil, 0, ctx
+                ) { ctx, occurrence -> Bool in
                     let ctx = Unmanaged<Ctx>.fromOpaque(ctx!).takeUnretainedValue()
+                    let symbolRoles = IndexStoreOccurrence.Role(rawValue: ctx.api.fn.occurrence_get_roles(occurrence))
+                    let symbol = ctx.api.fn.occurrence_get_symbol(occurrence)
                     let sym = IndexStore.createSymbol(from: symbol, api: ctx.api)
-                    do { return try ctx.content.next(sym) }
-                    catch {
+                    var line: UInt32 = 0
+                    var column: UInt32 = 0
+                    ctx.api.fn.occurrence_get_line_col(occurrence, &line, &column)
+                    let location = IndexStoreOccurrence.Location(
+                        path: ctx.content.filepath, isSystem: ctx.content.isSystem,
+                        line: Int64(line), column: Int64(column)
+                    )
+                    let occ = IndexStoreOccurrence(roles: symbolRoles, symbol: sym, location: location, anchor: occurrence)
+                    do { return try ctx.content.next(occ) } catch {
                         ctx.error = error
                         return false
                     }
@@ -309,7 +354,6 @@ final class IndexStore {
                     throw error
                 }
             }
-            return true
         }
     }
 
@@ -342,8 +386,7 @@ final class IndexStore {
                         line: Int64(line), column: Int64(column)
                     )
                     let occ = IndexStoreOccurrence(roles: symbolRoles, symbol: sym, location: location, anchor: occurrence)
-                    do { return try ctx.content.next(occ) }
-                    catch {
+                    do { return try ctx.content.next(occ) } catch {
                         ctx.error = error
                         return false
                     }
@@ -366,8 +409,7 @@ final class IndexStore {
                 let roles = IndexStoreOccurrence.Role(rawValue: ctx.api.fn.symbol_relation_get_roles(relation))
                 let symbol = IndexStoreSymbolRef(anchor: ctx.api.fn.symbol_relation_get_symbol(relation))
                 let rel = IndexStoreRelation(roles: roles, symbolRef: symbol)
-                do { return try ctx.content(rel) }
-                catch {
+                do { return try ctx.content(rel) } catch {
                     ctx.error = error
                     return false
                 }
@@ -421,6 +463,7 @@ final class IndexStoreAPI {
         api.unit_dependency_is_system = try requireSym(dylib, "indexstore_unit_dependency_is_system")
         api.record_reader_create = try requireSym(dylib, "indexstore_record_reader_create")
         api.record_reader_occurrences_apply_f = try requireSym(dylib, "indexstore_record_reader_occurrences_apply_f")
+        api.record_reader_occurrences_of_symbols_apply_f = try requireSym(dylib, "indexstore_record_reader_occurrences_of_symbols_apply_f")
         api.record_reader_symbols_apply_f = try requireSym(dylib, "indexstore_record_reader_symbols_apply_f")
         api.occurrence_get_roles = try requireSym(dylib, "indexstore_occurrence_get_roles")
         api.occurrence_get_symbol = try requireSym(dylib, "indexstore_occurrence_get_symbol")
@@ -438,7 +481,7 @@ final class IndexStoreAPI {
     }
 
     func throwsfy<T>(_ fn: (inout indexstore_error_t?) -> T) throws -> T {
-        var error: indexstore_error_t? = nil
+        var error: indexstore_error_t?
         let ret = fn(&error)
 
         if let error = error {
@@ -468,7 +511,7 @@ extension IndexStoreAPI {
 
             let pipe = Pipe()
             var stdoutContent: String = ""
-            pipe.fileHandleForReading.readabilityHandler = { (fh : FileHandle) -> Void in
+            pipe.fileHandleForReading.readabilityHandler = { (fh: FileHandle) -> Void in
                 let contents = fh.readDataToEndOfFile()
                 stdoutContent += String(decoding: contents, as: Unicode.UTF8.self)
             }

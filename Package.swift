@@ -9,7 +9,7 @@ let package = Package(
     products: [
         .library(
             name: "SwiftRename",
-            targets: ["SwiftRename"]),
+            targets: ["SwiftRename"])
     ],
     dependencies: [
     ],
@@ -22,6 +22,6 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "SwiftRenameTests",
-            dependencies: ["SwiftRename"]),
+            dependencies: ["SwiftRename"])
     ]
 )

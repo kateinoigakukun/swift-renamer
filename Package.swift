@@ -4,24 +4,24 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftRename",
+    name: "SwiftRenamer",
     platforms: [.macOS(.v10_12)],
     products: [
         .library(
-            name: "SwiftRename",
-            targets: ["SwiftRename"])
+            name: "SwiftRenamer",
+            targets: ["SwiftRenamer"])
     ],
     dependencies: [
     ],
     targets: [
         .target(
-            name: "SwiftRename",
-            dependencies: ["_CSwiftRename"]),
+            name: "SwiftRenamer",
+            dependencies: ["_CSwiftRenamer"]),
         .target(
-            name: "_CSwiftRename",
+            name: "_CSwiftRenamer",
             dependencies: []),
         .testTarget(
-            name: "SwiftRenameTests",
-            dependencies: ["SwiftRename"])
+            name: "SwiftRenamerTests",
+            dependencies: ["SwiftRenamer"])
     ]
 )

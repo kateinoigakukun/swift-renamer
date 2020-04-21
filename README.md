@@ -1,3 +1,3 @@
-# SwiftRename
+# swift-renamer
 
-A description of this package.
+

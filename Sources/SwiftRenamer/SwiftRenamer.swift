@@ -4,6 +4,10 @@ public struct SwiftRename {
 
     let indexStore: IndexStore
 
+    public init(storePath: URL, indexStoreAPI: IndexStoreAPI) throws {
+        self.indexStore = try IndexStore.open(store: storePath, api: indexStoreAPI)
+    }
+
     public init(storePath: URL) throws {
         self.indexStore = try IndexStore.open(store: storePath, api: .make())
     }

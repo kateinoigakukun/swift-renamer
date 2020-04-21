@@ -431,7 +431,7 @@ extension Bool {
     }
 }
 
-final class IndexStoreAPI {
+public final class IndexStoreAPI {
 
     struct Dylib {
         let handle: UnsafeMutableRawPointer
@@ -442,7 +442,7 @@ final class IndexStoreAPI {
 
     let fn: indexstore_functions_t
 
-    init(dylib path: URL) throws {
+    public init(dylib path: URL) throws {
         self.path = path
         self.dylib = Dylib(handle: dlopen(path.path, RTLD_LAZY | RTLD_LOCAL | RTLD_FIRST))
         var api = indexstore_functions_t()

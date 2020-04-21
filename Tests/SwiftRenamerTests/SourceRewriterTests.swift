@@ -1,5 +1,5 @@
 import XCTest
-@testable import SwiftRename
+@testable import SwiftRenamer
 
 class SourceRewiterTests: XCTestCase {
 

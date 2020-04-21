@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SwiftRename {
+public struct SwiftRenamer {
 
     let indexStore: IndexStore
     public init(indexStore: IndexStore) {
@@ -30,19 +30,21 @@ public struct SwiftRename {
     public func replacements(where condition: (IndexStoreOccurrence) -> String?) throws -> [String: [Replacement]] {
 
         var usrToOccurrence: [String: [IndexStoreOccurrence]] = [:]
-        var entries: [(usr: String, newSymbol: String)] = []
+        var entries: [(usr: String, newText: String)] = []
 
         try self.indexStore.forEachUnits { unit -> Bool in
             try self.indexStore.forEachOccurrences(for: unit) { (occurrence) -> Bool in
                 guard !occurrence.location.isSystem else { return true }
-                guard let newSymbol = condition(occurrence) else { return true }
-                entries.append((occurrence.symbol.usr, newSymbol))
 
                 if usrToOccurrence[occurrence.symbol.usr] == nil {
-                    usrToOccurrence[occurrence.symbol.usr] = []
+                    usrToOccurrence[occurrence.symbol.usr] = [occurrence]
                 } else {
                     usrToOccurrence[occurrence.symbol.usr]?.append(occurrence)
                 }
+
+                guard let newSymbol = condition(occurrence) else { return true }
+                entries.append((occurrence.symbol.usr, newSymbol))
+
                 return true
             }
             return true
@@ -55,7 +57,7 @@ public struct SwiftRename {
             for occ in occs {
                 let replacement = Replacement(
                     location: .init(line: occ.location.line, column: occ.location.column),
-                    length: occ.symbol.name.count, newText: entry.newSymbol
+                    length: occ.symbol.name.count, newText: entry.newText
                 )
                 if results[occ.location.path] == nil {
                     results[occ.location.path] = [replacement]

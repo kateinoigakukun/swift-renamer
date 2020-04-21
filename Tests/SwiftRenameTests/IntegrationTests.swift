@@ -44,17 +44,21 @@ class IntegrationTests: XCTestCase {
                 .sorted(by: { $0.path < $1.path })
         )
     }
-
-    func testRewrite() throws {
-        let system = try SwiftRename(storePath: Self.indexStorePath)
-        let replacements = try system.replacements(for: "s:16IntegrationTests9ViewModelC4nameSSSgvp", newSymbol: "nickname")
-
-        let results = try replacements.reduce(into: [String: String]()) { (result, element) throws -> Void in
+    
+    func rewrite(replacements: [String: [Replacement]]) throws -> [String: String] {
+        return try replacements.reduce(into: [String: String]()) { (result, element) throws -> Void in
             let (path, replacements) = element
             let rewriter = try SourceRewriter(content: String(contentsOfFile: path))
             replacements.forEach(rewriter.replace)
             result[String(path.split(separator: "/").last!)] = rewriter.apply()
         }
+    }
+
+    func testRewrite() throws {
+        let system = try SwiftRename(storePath: Self.indexStorePath)
+        let replacements = try system.replacements(for: "s:16IntegrationTests9ViewModelC4nameSSSgvp", newSymbol: "nickname")
+
+        let results = try rewrite(replacements: replacements)
 
         XCTAssertEqual(results["ViewModel.swift"], """
         class ViewModel {
@@ -63,6 +67,31 @@ class IntegrationTests: XCTestCase {
 
         """)
 
+        XCTAssertEqual(results["ViewController.swift"], """
+        import UIKit
+
+        class ViewController: UIViewController {
+
+            let viewModel = ViewModel()
+            override func viewDidLoad() {
+                super.viewDidLoad()
+
+                viewModel.nickname = "Initial Name"
+            }
+        }
+
+        """)
+    }
+
+    func testRewriteInCondition() throws {
+        let system = try SwiftRename(storePath: Self.indexStorePath)
+        let replacements = try system.replacements(for: "s:16IntegrationTests9ViewModelC4nameSSSgvp", newSymbol: "nickname") { occ in
+            !occ.roles.contains(.definition)
+        }
+
+        let results = try rewrite(replacements: replacements)
+
+        XCTAssertNil(results["ViewModel.swift"])
         XCTAssertEqual(results["ViewController.swift"], """
         import UIKit
 

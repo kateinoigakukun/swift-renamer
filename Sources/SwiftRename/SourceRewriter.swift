@@ -1,23 +1,23 @@
-struct Replacement {
+public struct Replacement {
     let location: (line: Int64, column: Int64)
     let length: Int
     let newText: String
 }
 
-class SourceRewriter {
+public class SourceRewriter {
     let content: String
 
     var replacements: [Replacement] = []
 
-    init(content: String) {
+    public init(content: String) {
         self.content = content
     }
 
-    func replace(_ replacement: Replacement) {
+    public func replace(_ replacement: Replacement) {
         replacements.append(replacement)
     }
 
-    func apply() -> String {
+    public func apply() -> String {
         let sorted = replacements.sorted(by: {
             $0.location.line == $1.location.line ?
                 $0.location.column > $1.location.column :

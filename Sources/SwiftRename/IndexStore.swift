@@ -1,13 +1,13 @@
 import _CSwiftRename
 import Foundation
 
-struct IndexStoreUnit {
-    let name: String
+public struct IndexStoreUnit {
+    public let name: String
 }
 
-struct IndexStoreSymbol {
+public struct IndexStoreSymbol {
 
-    enum Kind: UInt32 {
+    public enum Kind: UInt32 {
         case unknown = 0
         case module = 1
         case namespace = 2
@@ -38,7 +38,7 @@ struct IndexStoreSymbol {
         case commenttag = 1000
     }
 
-    enum SubKind: UInt32 {
+    public enum SubKind: UInt32 {
         case none = 0
         case cxxCopyConstructor = 1
         case cxxMoveConstructor = 2
@@ -65,20 +65,20 @@ struct IndexStoreSymbol {
         case swiftAccessorModify = 1015
     }
 
-    struct Property: OptionSet, Hashable {
-        let rawValue: UInt32
+    public struct Property: OptionSet, Hashable {
+        public let rawValue: UInt32
 
-        static let generic = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_GENERIC)
-        static let templatePartialSpecialization = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_TEMPLATE_PARTIAL_SPECIALIZATION)
-        static let templateSpecialization = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_TEMPLATE_SPECIALIZATION)
-        static let unittest = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_UNITTEST)
-        static let ibAnnotated = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_IBANNOTATED)
-        static let ibOutletCollection = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_IBOUTLETCOLLECTION)
-        static let gkinspectable = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_GKINSPECTABLE)
-        static let local = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_LOCAL)
-        static let protocolInterface = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_PROTOCOL_INTERFACE)
+        public static let generic = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_GENERIC)
+        public static let templatePartialSpecialization = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_TEMPLATE_PARTIAL_SPECIALIZATION)
+        public static let templateSpecialization = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_TEMPLATE_SPECIALIZATION)
+        public static let unittest = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_UNITTEST)
+        public static let ibAnnotated = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_IBANNOTATED)
+        public static let ibOutletCollection = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_IBOUTLETCOLLECTION)
+        public static let gkinspectable = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_GKINSPECTABLE)
+        public static let local = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_LOCAL)
+        public static let protocolInterface = Property(rawValue: INDEXSTORE_SYMBOL_PROPERTY_PROTOCOL_INTERFACE)
 
-        init(rawValue: UInt32) {
+        public init(rawValue: UInt32) {
             self.rawValue = rawValue
         }
 
@@ -87,53 +87,53 @@ struct IndexStoreSymbol {
         }
     }
 
-    enum Language: UInt32 {
+    public enum Language: UInt32 {
         case c = 0
         case objc = 1
         case cxx = 2
         case swift = 100
     }
 
-    let usr: String
-    let name: String
-    let kind: Kind
-    let subKind: SubKind
-    let language: Language
+    public let usr: String
+    public let name: String
+    public let kind: Kind
+    public let subKind: SubKind
+    public let language: Language
 
     fileprivate let anchor: indexstore_symbol_t?
 }
 
-struct IndexStoreOccurrence {
-    struct Role: OptionSet, Hashable {
+public struct IndexStoreOccurrence {
+    public struct Role: OptionSet, Hashable {
 
-        let rawValue: UInt64
+        public let rawValue: UInt64
 
-        static let declaration = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_DECLARATION)
-        static let definition = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_DEFINITION)
-        static let reference = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REFERENCE)
-        static let read = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_READ)
-        static let write = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_WRITE)
-        static let call = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_CALL)
-        static let `dynamic` = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_DYNAMIC)
-        static let addressOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_ADDRESSOF)
-        static let implicit = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_IMPLICIT)
+        public static let declaration = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_DECLARATION)
+        public static let definition = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_DEFINITION)
+        public static let reference = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REFERENCE)
+        public static let read = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_READ)
+        public static let write = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_WRITE)
+        public static let call = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_CALL)
+        public static let `dynamic` = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_DYNAMIC)
+        public static let addressOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_ADDRESSOF)
+        public static let implicit = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_IMPLICIT)
 
-        static let childOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_CHILDOF)
-        static let baseOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_BASEOF)
-        static let overrideOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_OVERRIDEOF)
-        static let receivedBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_RECEIVEDBY)
-        static let calledBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_CALLEDBY)
-        static let extendedBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_EXTENDEDBY)
-        static let accessorOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_ACCESSOROF)
-        static let containedBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_CONTAINEDBY)
-        static let ibTypeOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_IBTYPEOF)
-        static let specializationOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_SPECIALIZATIONOF)
+        public static let childOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_CHILDOF)
+        public static let baseOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_BASEOF)
+        public static let overrideOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_OVERRIDEOF)
+        public static let receivedBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_RECEIVEDBY)
+        public static let calledBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_CALLEDBY)
+        public static let extendedBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_EXTENDEDBY)
+        public static let accessorOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_ACCESSOROF)
+        public static let containedBy = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_CONTAINEDBY)
+        public static let ibTypeOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_IBTYPEOF)
+        public static let specializationOf = Role(rawValue: INDEXSTORE_SYMBOL_ROLE_REL_SPECIALIZATIONOF)
 
-        static let canonical = Role(rawValue: 1 << 63)
+        public static let canonical = Role(rawValue: 1 << 63)
 
-        static let all = Role(rawValue: ~0)
+        public static let all = Role(rawValue: ~0)
 
-        init(rawValue: UInt64) {
+        public init(rawValue: UInt64) {
             self.rawValue = rawValue
         }
         init(rawValue: indexstore_symbol_role_t) {
@@ -141,27 +141,27 @@ struct IndexStoreOccurrence {
         }
     }
 
-    struct Location: Equatable {
-        var path: String
-        var isSystem: Bool
-        var line: Int64
-        var column: Int64
+    public struct Location: Equatable {
+        public var path: String
+        public var isSystem: Bool
+        public var line: Int64
+        public var column: Int64
     }
 
-    let roles: Role
-    let symbol: IndexStoreSymbol
-    let location: Location
+    public let roles: Role
+    public let symbol: IndexStoreSymbol
+    public let location: Location
 
     fileprivate let anchor: indexstore_occurrence_t?
 }
 
-struct IndexStoreSymbolRef {
+public struct IndexStoreSymbolRef {
     fileprivate let anchor: indexstore_symbol_t?
 }
 
-struct IndexStoreRelation {
-    let roles: IndexStoreOccurrence.Role
-    let symbolRef: IndexStoreSymbolRef
+public struct IndexStoreRelation {
+    public let roles: IndexStoreOccurrence.Role
+    public let symbolRef: IndexStoreSymbolRef
 }
 
 enum IndexStoreError: LocalizedError {
@@ -193,7 +193,7 @@ enum IndexStoreError: LocalizedError {
     }
 }
 
-final class IndexStore {
+public final class IndexStore {
 
     let store: indexstore_t
     let api: IndexStoreAPI
@@ -220,7 +220,7 @@ final class IndexStore {
         }
     }
 
-    func forEachUnits(_ next: (IndexStoreUnit) throws -> Bool) rethrows {
+    public func forEachUnits(_ next: (IndexStoreUnit) throws -> Bool) rethrows {
         typealias Ctx = Context<(IndexStoreUnit) throws -> Bool>
         try withoutActuallyEscaping(next) { next in
             let handler = Ctx(next, api: api)
@@ -239,7 +239,7 @@ final class IndexStore {
         }
     }
 
-    func forEachRecordDependencies(for unit: IndexStoreUnit, _ next: (indexstore_unit_dependency_t) throws -> Bool) throws {
+    public func forEachRecordDependencies(for unit: IndexStoreUnit, _ next: (indexstore_unit_dependency_t) throws -> Bool) throws {
         guard let reader = try api.throwsfy({ api.fn.unit_reader_create(store, unit.name, &$0) }) else {
             throw IndexStoreError.unableCreateUnintReader(unit.name)
         }
@@ -281,7 +281,7 @@ final class IndexStore {
         )
     }
 
-    func forEachSymbols(for record: indexstore_unit_dependency_t, _ next: (IndexStoreSymbol) throws -> Bool) throws {
+    public func forEachSymbols(for record: indexstore_unit_dependency_t, _ next: (IndexStoreSymbol) throws -> Bool) throws {
         let recordName = api.fn.unit_dependency_get_name(record).toSwiftString()
         let recordPath = api.fn.unit_dependency_get_filepath(record).toSwiftString()
         let isSystem = api.fn.unit_dependency_is_system(record)
@@ -310,7 +310,7 @@ final class IndexStore {
         }
     }
 
-    func forEachOccurrences(for record: indexstore_unit_dependency_t, symbol: IndexStoreSymbolRef,
+    public func forEachOccurrences(for record: indexstore_unit_dependency_t, symbol: IndexStoreSymbolRef,
                             _ next: (IndexStoreOccurrence) throws -> Bool) throws {
         let recordName = api.fn.unit_dependency_get_name(record).toSwiftString()
         let recordPath = api.fn.unit_dependency_get_filepath(record).toSwiftString()
@@ -357,7 +357,7 @@ final class IndexStore {
         }
     }
 
-    func forEachOccurrences(for unit: IndexStoreUnit, _ next: (IndexStoreOccurrence) throws -> Bool) throws {
+    public func forEachOccurrences(for unit: IndexStoreUnit, _ next: (IndexStoreOccurrence) throws -> Bool) throws {
         try forEachRecordDependencies(for: unit) { (record) -> Bool in
             let recordName = api.fn.unit_dependency_get_name(record).toSwiftString()
             let recordPath = api.fn.unit_dependency_get_filepath(record).toSwiftString()
@@ -399,7 +399,7 @@ final class IndexStore {
         }
     }
 
-    func forEachRelations(for occ: IndexStoreOccurrence, _ next: (IndexStoreRelation) throws -> Bool) rethrows {
+    public func forEachRelations(for occ: IndexStoreOccurrence, _ next: (IndexStoreRelation) throws -> Bool) rethrows {
         typealias Ctx = Context<((IndexStoreRelation) throws -> Bool)>
         try withoutActuallyEscaping(next) { next in
             let handler = Ctx(next, api: api)

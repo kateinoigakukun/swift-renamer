@@ -3,20 +3,22 @@ import Foundation
 public struct SwiftRename {
 
     let indexStore: IndexStore
-
-    public init(storePath: URL, indexStoreAPI: IndexStoreAPI) throws {
-        self.indexStore = try IndexStore.open(store: storePath, api: indexStoreAPI)
+    public init(indexStore: IndexStore) {
+        self.indexStore = indexStore
     }
 
     public init(storePath: URL) throws {
-        self.indexStore = try IndexStore.open(store: storePath, api: .make())
+        self.indexStore = try IndexStore.open(store: storePath, api: .init())
     }
 
-    public func occrrences(for usr: String) throws -> [IndexStoreOccurrence] {
+    public func occurrences(
+        where condition: (IndexStoreOccurrence) -> Bool
+    ) throws -> [IndexStoreOccurrence] {
         var occs: [IndexStoreOccurrence] = []
         try self.indexStore.forEachUnits { unit -> Bool in
             try self.indexStore.forEachOccurrences(for: unit) { (occurrence) -> Bool in
-                guard occurrence.symbol.usr == usr else { return true }
+                guard !occurrence.location.isSystem else { return true }
+                guard condition(occurrence) else { return true }
                 occs.append(occurrence)
                 return true
             }
@@ -25,22 +27,30 @@ public struct SwiftRename {
         return occs
     }
 
-    public func replacements(for usr: String, newSymbol: String,
-                      when condition: (IndexStoreOccurrence) -> Bool = { _ in true }) throws -> [String: [Replacement]] {
-        let occs = try occrrences(for: usr)
+    public func replacements(
+                             where condition: (IndexStoreOccurrence) -> String?) throws -> [String: [Replacement]] {
+        var entries: [(occ: IndexStoreOccurrence, newSymbol: String)] = []
+        try self.indexStore.forEachUnits { unit -> Bool in
+            try self.indexStore.forEachOccurrences(for: unit) { (occurrence) -> Bool in
+                guard !occurrence.location.isSystem else { return true }
+                guard let newSymbol = condition(occurrence) else { return true }
+                entries.append((occurrence, newSymbol))
+                return true
+            }
+            return true
+        }
 
         var results: [/* path */ String: [Replacement]] = [:]
 
-        for occ in occs {
-            guard condition(occ) else { continue }
+        for entry in entries {
             let replacement = Replacement(
-                location: (occ.location.line, occ.location.column),
-                length: occ.symbol.name.count, newText: newSymbol
+                location: (entry.occ.location.line, entry.occ.location.column),
+                length: entry.occ.symbol.name.count, newText: entry.newSymbol
             )
-            if results[occ.location.path] == nil {
-                results[occ.location.path] = [replacement]
+            if results[entry.occ.location.path] == nil {
+                results[entry.occ.location.path] = [replacement]
             } else {
-                results[occ.location.path]?.append(replacement)
+                results[entry.occ.location.path]?.append(replacement)
             }
         }
         return results

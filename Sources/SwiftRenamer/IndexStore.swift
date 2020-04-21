@@ -203,7 +203,7 @@ public final class IndexStore {
         self.api = api
     }
 
-    static func open(store path: URL, api: IndexStoreAPI) throws -> IndexStore {
+    public static func open(store path: URL, api: IndexStoreAPI) throws -> IndexStore {
         guard let store = try api.throwsfy({ api.fn.store_create(path.path, &$0) }) else {
             throw IndexStoreError.unableOpen(path)
         }
@@ -420,7 +420,7 @@ public final class IndexStore {
         }
     }
 
-    func getSymbol(for symRef: IndexStoreSymbolRef) -> IndexStoreSymbol {
+    public func getSymbol(for symRef: IndexStoreSymbolRef) -> IndexStoreSymbol {
         return Self.createSymbol(from: symRef.anchor, api: api)
     }
 }
@@ -531,8 +531,8 @@ extension IndexStoreAPI {
         }
     }
 
-    static func make() throws -> IndexStoreAPI {
-        return try IndexStoreAPI(dylib: createIndexStoreLib().get())
+    public convenience init() throws {
+        try self.init(dylib: IndexStoreAPI.createIndexStoreLib().get())
     }
 }
 

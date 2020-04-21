@@ -27,8 +27,8 @@ class IntegrationTests: XCTestCase {
     }
 
     func testGetOccurrences() throws {
-        let system = try SwiftRename(storePath: Self.indexStorePath)
-        let occs = try system.occrrences(for: "s:16IntegrationTests9ViewModelC4nameSSSgvp")
+        let system = try SwiftRenamer(storePath: Self.indexStorePath)
+        let occs = try system.occurrences(where: { $0.symbol.usr == "s:16IntegrationTests9ViewModelC4nameSSSgvp" })
         XCTAssertEqual(occs.count, 2)
         let locations = occs.map(\.location)
 
@@ -55,8 +55,11 @@ class IntegrationTests: XCTestCase {
     }
 
     func testRewrite() throws {
-        let system = try SwiftRename(storePath: Self.indexStorePath)
-        let replacements = try system.replacements(for: "s:16IntegrationTests9ViewModelC4nameSSSgvp", newSymbol: "nickname")
+        let system = try SwiftRenamer(storePath: Self.indexStorePath)
+
+        let replacements = try system.replacements(where: { (occ) -> String? in
+            occ.symbol.usr == "s:16IntegrationTests9ViewModelC4nameSSSgvp" ? "nickname" : nil
+        })
 
         let results = try rewrite(replacements: replacements)
 
@@ -67,31 +70,6 @@ class IntegrationTests: XCTestCase {
 
         """)
 
-        XCTAssertEqual(results["ViewController.swift"], """
-        import UIKit
-
-        class ViewController: UIViewController {
-
-            let viewModel = ViewModel()
-            override func viewDidLoad() {
-                super.viewDidLoad()
-
-                viewModel.nickname = "Initial Name"
-            }
-        }
-
-        """)
-    }
-
-    func testRewriteInCondition() throws {
-        let system = try SwiftRename(storePath: Self.indexStorePath)
-        let replacements = try system.replacements(for: "s:16IntegrationTests9ViewModelC4nameSSSgvp", newSymbol: "nickname") { occ in
-            !occ.roles.contains(.definition)
-        }
-
-        let results = try rewrite(replacements: replacements)
-
-        XCTAssertNil(results["ViewModel.swift"])
         XCTAssertEqual(results["ViewController.swift"], """
         import UIKit
 

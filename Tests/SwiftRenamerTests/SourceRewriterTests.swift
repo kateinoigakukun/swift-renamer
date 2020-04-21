@@ -10,7 +10,7 @@ class SourceRewiterTests: XCTestCase {
 
         let rewriter = SourceRewriter(content: content)
         let replacement = Replacement(
-            location: (line: 1, column: 5), length: 3, newText: "buzz"
+            location: .init(line: 1, column: 5), length: 3, newText: "buzz"
         )
         rewriter.replace(replacement)
         let result = rewriter.apply()
@@ -27,10 +27,10 @@ class SourceRewiterTests: XCTestCase {
         """
 
         let replacement1 = Replacement(
-            location: (line: 1, column: 5), length: 3, newText: "buzz"
+            location: .init(line: 1, column: 5), length: 3, newText: "buzz"
         )
         let replacement2 = Replacement(
-            location: (line: 2, column: 8), length: 3, newText: "old"
+            location: .init(line: 2, column: 8), length: 3, newText: "old"
         )
         let replacements = [replacement1, replacement2]
 
@@ -50,10 +50,10 @@ class SourceRewiterTests: XCTestCase {
         """
 
         let replacement1 = Replacement(
-            location: (line: 1, column: 8), length: 3, newText: "old"
+            location: .init(line: 1, column: 8), length: 3, newText: "old"
         )
         let replacement2 = Replacement(
-            location: (line: 1, column: 1), length: 5, newText: "Good bye"
+            location: .init(line: 1, column: 1), length: 5, newText: "Good bye"
         )
         let replacements = [replacement1, replacement2]
 

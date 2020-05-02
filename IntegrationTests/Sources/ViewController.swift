@@ -7,5 +7,6 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 
         viewModel.name = "Initial Name"
+        viewModel.foo(input: 1)
     }
 }

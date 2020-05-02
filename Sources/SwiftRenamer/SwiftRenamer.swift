@@ -55,10 +55,21 @@ public struct SwiftRenamer {
         for entry in entries {
             let occs = usrToOccurrence[entry.usr]!
             for occ in occs {
+                let symbolLength: Int
+
+                if occ.symbol.kind == .instancemethod {
+                    let name = occ.symbol.name
+                    guard let indexOfLastOfName = name.firstIndex(of: "(") else { continue }
+                    symbolLength = name.distance(from: name.startIndex, to: indexOfLastOfName)
+                } else {
+                    symbolLength = occ.symbol.name.count
+                }
+
                 let replacement = Replacement(
                     location: .init(line: occ.location.line, column: occ.location.column),
-                    length: occ.symbol.name.count, newText: entry.newText
+                    length: symbolLength, newText: entry.newText
                 )
+
                 if results[occ.location.path] == nil {
                     results[occ.location.path] = [replacement]
                 } else {

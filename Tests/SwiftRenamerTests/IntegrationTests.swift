@@ -38,7 +38,7 @@ class IntegrationTests: XCTestCase {
         XCTAssertEqual(
             locations.sorted(by: { $0.path < $1.path }),
             [
-                .init(path: projectSourcePath("ViewModel.swift"), isSystem: false, line: 2, column: 9),
+                .init(path: projectSourcePath("ViewModel.swift"), isSystem: false, line: 4, column: 9),
                 .init(path: projectSourcePath("ViewController.swift"), isSystem: false, line: 9, column: 19)
             ]
                 .sorted(by: { $0.path < $1.path })
@@ -58,13 +58,21 @@ class IntegrationTests: XCTestCase {
         let system = try SwiftRenamer(storePath: Self.indexStorePath)
 
         let replacements = try system.replacements(where: { (occ) -> String? in
-            occ.symbol.usr == "s:16IntegrationTests9ViewModelC4nameSSSgvp" ? "nickname" : nil
+                if occ.symbol.usr == "s:16IntegrationTests9ViewModelC4nameSSSgvp" {
+                    return "nickname"
+            }
+            if occ.symbol.name == "foo(input:)", occ.symbol.kind == .instancemethod {
+                return "bar"
+            }
+            return nil
         })
 
         let results = try rewrite(replacements: replacements)
 
         XCTAssertEqual(results["ViewModel.swift"], """
         class ViewModel {
+            typealias Input = Int
+            func bar(input: Input) {}
             var nickname: String?
         }
 
@@ -80,6 +88,7 @@ class IntegrationTests: XCTestCase {
                 super.viewDidLoad()
 
                 viewModel.nickname = "Initial Name"
+                viewModel.bar(input: 1)
             }
         }
 

@@ -1,4 +1,4 @@
-import _CSwiftRename
+import _CSwiftRenamer
 import Foundation
 
 public struct IndexStoreUnit {

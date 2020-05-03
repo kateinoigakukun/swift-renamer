@@ -1,4 +1,5 @@
 import Foundation
+import SwiftIndexStore
 
 public struct SwiftRenamer {
 
@@ -8,23 +9,7 @@ public struct SwiftRenamer {
     }
 
     public init(storePath: URL) throws {
-        self.indexStore = try IndexStore.open(store: storePath, api: .init())
-    }
-
-    public func occurrences(
-        where condition: (IndexStoreOccurrence) -> Bool
-    ) throws -> [IndexStoreOccurrence] {
-        var occs: [IndexStoreOccurrence] = []
-        try self.indexStore.forEachUnits { unit -> Bool in
-            try self.indexStore.forEachOccurrences(for: unit) { (occurrence) -> Bool in
-                guard !occurrence.location.isSystem else { return true }
-                guard condition(occurrence) else { return true }
-                occs.append(occurrence)
-                return true
-            }
-            return true
-        }
-        return occs
+        self.indexStore = try IndexStore.open(store: storePath, lib: .open())
     }
 
     public func replacements(where condition: (IndexStoreOccurrence) -> String?) throws -> [String: [Replacement]] {
@@ -33,18 +18,23 @@ public struct SwiftRenamer {
         var entries: [(usr: String, newText: String)] = []
 
         try self.indexStore.forEachUnits { unit -> Bool in
-            try self.indexStore.forEachOccurrences(for: unit) { (occurrence) -> Bool in
-                guard !occurrence.location.isSystem else { return true }
+            try self.indexStore.forEachRecordDependencies(for: unit) { dependency in
+                guard case let .record(record) = dependency else { return true }
+                try self.indexStore.forEachOccurrences(for: record) { (occurrence) -> Bool in
+                    guard let usr = occurrence.symbol.usr,
+                        !occurrence.location.isSystem else { return true }
 
-                if usrToOccurrence[occurrence.symbol.usr] == nil {
-                    usrToOccurrence[occurrence.symbol.usr] = [occurrence]
-                } else {
-                    usrToOccurrence[occurrence.symbol.usr]?.append(occurrence)
+                    if usrToOccurrence[usr] == nil {
+                        usrToOccurrence[usr] = [occurrence]
+                    } else {
+                        usrToOccurrence[usr]?.append(occurrence)
+                    }
+
+                    guard let newSymbol = condition(occurrence) else { return true }
+                    entries.append((usr, newSymbol))
+
+                    return true
                 }
-
-                guard let newSymbol = condition(occurrence) else { return true }
-                entries.append((occurrence.symbol.usr, newSymbol))
-
                 return true
             }
             return true
@@ -55,14 +45,15 @@ public struct SwiftRenamer {
         for entry in entries {
             let occs = usrToOccurrence[entry.usr]!
             for occ in occs {
+                guard let symbolName = occ.symbol.name,
+                    let occPath = occ.location.path else { continue }
                 let symbolLength: Int
 
-                if occ.symbol.kind == .instancemethod {
-                    let name = occ.symbol.name
-                    guard let indexOfLastOfName = name.firstIndex(of: "(") else { continue }
-                    symbolLength = name.distance(from: name.startIndex, to: indexOfLastOfName)
+                if occ.symbol.kind == .instanceMethod {
+                    guard let indexOfLastOfName = symbolName.firstIndex(of: "(") else { continue }
+                    symbolLength = symbolName.distance(from: symbolName.startIndex, to: indexOfLastOfName)
                 } else {
-                    symbolLength = occ.symbol.name.count
+                    symbolLength = symbolName.count
                 }
 
                 let replacement = Replacement(
@@ -70,10 +61,10 @@ public struct SwiftRenamer {
                     length: symbolLength, newText: entry.newText
                 )
 
-                if results[occ.location.path] == nil {
-                    results[occ.location.path] = [replacement]
+                if results[occPath] == nil {
+                    results[occPath] = [replacement]
                 } else {
-                    results[occ.location.path]?.append(replacement)
+                    results[occPath]?.append(replacement)
                 }
             }
         }

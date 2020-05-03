@@ -1,4 +1,0 @@
-module _CSwiftRenamer {
-    header "indexstore_functions.h"
-    export *
-}

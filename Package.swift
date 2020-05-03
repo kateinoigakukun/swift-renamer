@@ -1,5 +1,4 @@
 // swift-tools-version:5.2
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
@@ -12,14 +11,14 @@ let package = Package(
             targets: ["SwiftRenamer"])
     ],
     dependencies: [
+        .package(name: "SwiftIndexStore", url: "https://github.com/kateinoigakukun/swift-indexstore", .branch("master")),
     ],
     targets: [
         .target(
             name: "SwiftRenamer",
-            dependencies: ["_CSwiftRenamer"]),
-        .target(
-            name: "_CSwiftRenamer",
-            dependencies: []),
+            dependencies: [
+                .product(name: "SwiftIndexStore", package: "SwiftIndexStore"),
+            ]),
         .testTarget(
             name: "SwiftRenamerTests",
             dependencies: ["SwiftRenamer"])

@@ -17,12 +17,8 @@ let package = Package(
         .target(
             name: "SwiftRenamer",
             dependencies: [
-                .target(name: "_CSwiftRenamer"),
                 .product(name: "SwiftIndexStore", package: "SwiftIndexStore"),
             ]),
-        .target(
-            name: "_CSwiftRenamer",
-            dependencies: []),
         .testTarget(
             name: "SwiftRenamerTests",
             dependencies: ["SwiftRenamer"])

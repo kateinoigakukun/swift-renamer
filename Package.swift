@@ -11,7 +11,7 @@ let package = Package(
             targets: ["SwiftRenamer"])
     ],
     dependencies: [
-        .package(name: "SwiftIndexStore", url: "https://github.com/kateinoigakukun/swift-indexstore", .branch("master")),
+        .package(name: "SwiftIndexStore", url: "https://github.com/kateinoigakukun/swift-indexstore", .exact("0.1.0")),
     ],
     targets: [
         .target(

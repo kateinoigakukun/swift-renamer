@@ -14,9 +14,9 @@
         "package": "SwiftIndexStore",
         "repositoryURL": "https://github.com/kateinoigakukun/swift-indexstore",
         "state": {
-          "branch": "master",
-          "revision": "b20fc8eec8225e69a0c816b5881828e862f3a118",
-          "version": null
+          "branch": null,
+          "revision": "7e9bcef858509b62cf3a23bada0bc107cec0624f",
+          "version": "0.1.0"
         }
       }
     ]
